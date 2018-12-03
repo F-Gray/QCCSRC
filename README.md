@@ -1,3 +1,5 @@
+![](ReadMe/QCCSRC.png)
+
 # QCCSRC
 
 Libraries for high performance scientific computing, developed in the Qatar Carbonates and Carbon Storage Research Centre at Imperial College London by F. Gray
