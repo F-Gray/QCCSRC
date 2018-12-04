@@ -18,12 +18,12 @@ Libraries for high performance scientific computing, developed in the Qatar Carb
 The C++ header files included here are used in codes developed within the Qatar Carbonates and Carbon Storage Research Centre (QCCSRC) at Imperial College London. They provide useful library functions for:
 
 * Reading input parameter files
+* Buffered file reading/writing with array ordering operations
 * 3D data grid class both on local memory systems and distributed over multi-node MPI systems
 * Domain decomposition class for multi-node MPI systems
 * Multithreading classes
+* Accurate timer
 * Topology mapping class for multi-node MPI systems, including GPUs
-* Buffered file reading/writing
-* Performance timer
 
 All libraries are compatible with both Linux and Windows systems.
 
@@ -35,11 +35,11 @@ These static library files can easily be used in a project by including the rele
 
 #include <InputFile.h>          //Reads input files
 #include <DataFiles.h>          //Buffered file reading and writing with array transformation
-#include <Timer.h>              //Accurate timing
-#include <Threads.h>            //Local multi-threading
-#include <FilePaths.h>		//Combines folder and file strings
 #include <Grids.h>              //Manipulate 3D grids
 #include <Decomposition.h>      //Lattice decomposition
+#include <Threads.h>            //Local multi-threading
+#include <Timer.h>              //Accurate timing
+#include <FilePaths.h>		//Combines folder and file strings
 
 #include <GridsMPI.h>		//Manipulate 3D grids distributed over MPI systems
 #include <TopologyMPI.h>        //Map topology of MPI system (no GPUs)
@@ -48,7 +48,7 @@ These static library files can easily be used in a project by including the rele
 
 ```
 
-The libraries <b>GridsMPI.h</b>, <b>TopologyMPI.h</b> and <b>TopologyMPI.cuh</b> are only usable if MPI libraries are included, and the library <b>TopologyMPI.cuh</b> also requires CUDA to be used
+The libraries <b>GridsMPI.h</b>, <b>TopologyMPI.h</b> and <b>TopologyMPI.cuh</b> are only usable if MPI libraries are included, and the library <b>TopologyMPI.cuh</b> also requires CUDA to be used. 
 
 ## Libraries
 
@@ -244,3 +244,21 @@ InputValueStructEx Parameters[] = {
 Here we define a second list of parameters using <i>InputValueStructEx</i> struct, which define entries for the sub-data. Now, the "ComplexData" entry in the list of the main parameters has <i>InputValueStructEx.Ptr</i> set to an array of <i>DataStruct</i>, and the <i>InputValueStructEx.DataStruct</i> field is set to the sub parameters list DataStructParams.
 
 Notice how pointers to data locations in the sub data <i>InputValueStructEx</i> are now relative to the struct pointer. This is achieved by using the <i>offsetof</i> macro. Note also that <i>offsetof</i> is only certain to behave correctly if the struct is POD ("plain old data").
+
+#### 3. Example with MPI threads
+
+### DataFiles.h
+
+### Grids.h
+
+### GridsMPI.h
+
+### Decomposition.h
+
+### Threads.h
+
+### Timer.h
+
+### FilePaths.h
+
+### Topology.cuh
