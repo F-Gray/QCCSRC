@@ -2,14 +2,16 @@
 
 # QCCSRC
 
-Libraries for high performance scientific computing, developed in the Qatar Carbonates and Carbon Storage Research Centre at Imperial College London by F. Gray
+Libraries for high performance scientific computing, developed in the Qatar Carbonates and Carbon Storage Research Centre at Imperial College London by Farrel Gray.
 
 ![](ReadMe/Graphic.png)
+
+Figure: Fluid flow velocity distribution (middle) and reactant concentration distribution (right) during injection into a rock core sample (left). Computed using a reactive transport model run on GPU cluster. For more details, see [Gray et al. (2018)](https://doi.org/10.1016/j.advwatres.2018.09.007)
 
 ## Table of Contents
 
 * [About](#About)
-* [Getting Started](#Getting--Started)
+* [Getting Started](#Getting~~Started)
 * [Libraries](#Libraries)
 * [Contact](#Contact)
 
@@ -265,7 +267,7 @@ All MPI threads initialise the class using the group communicator <i>Comm</i> an
 
 ### Threads.h
 
-This defines a class called <i>Threads</i> which creates local threads and a <i>Mutex</i> class for synchronisation. It provides similar capabilities to the C++11 library <Thread>, however the <i>Threads</i> class has its own inter-thread synchronisation routines built in which simplifies coding for highly parallel applications.
+This defines a class called <i>Threads</i> which creates local threads and a <i>Mutex</i> class for synchronisation. It provides similar capabilities to the C++11 thread library, however the <i>Threads</i> class has its own inter-thread synchronisation routines built in which simplifies coding for highly parallel applications.
 
 #### 1. Example with thread creation and synchronisation
 
@@ -348,6 +350,74 @@ void Mutex::Lock(bool Lock);   //Acquire the lock (Lock = true) or release the l
 ```
 
 ### Timer.h
+
+This file provides a simple high resolution timer class called <i>SimulationTimer</i>, which compatible with both Linux and Windows.
+
+1. Example
+
+```C++
+
+int main(){
+
+    SimulationTimer Timer;      //Initialise timer class, which automatically begins counting
+    
+    while(true){
+    
+    	sleep(1);
+    
+        double dtStep = Timer.GetTimeSinceLastStep();  //Returns time since GetTimeSinceLastStep() was last called in seconds
+        double dtTot  = Timer.GetSimulationTime();     //Returns time since SimulationTimer class was intialised in seconds
+        
+	printf("Time since last check: %.6f s, total time: %.6f s\n", dtStep, dtTot);
+    }
+
+    return 0;
+}
+
+```
+
+The following methods can be used to obtain time intervals
+
+
+```C++
+
+Timer::GetTimeSinceLastStep();      //Returns time since GetTimeSinceLastStep or GetTimeSinceLastStepms was last called in seconds
+Timer::GetTimeSinceLastStepms();    //Returns time since GetTimeSinceLastStep or GetTimeSinceLastStepms was last called in milliseconds
+Timer::GetSimulationTime();         //Returns time since SimulationTimer class was intialised in seconds
+
+```
+
+The timer class can also be reset using
+
+```C++
+Timer::Reset();    //Reset timer
+```
+
+A variety of different time formats can be printed to the console using
+
+```C++
+Timer::PrintTime(double Seconds);                      //Print time with default format (TimeFormat_Day_Hour_Min_Sec)
+Timer::PrintTime(double Seconds, TimeFormat Format);   //Print time with chosen format from TimeFormat enumeration
+```
+
+Time formats can be chosen from the <i>TimeFormat</i> enumeration
+
+
+```C++
+enum TimeFormat{
+    TimeFormat_ms,                //Milliseconds only e.g. "10ms"
+    TimeFormat_Sec,               //Seconds only e.g. "10s"
+    TimeFormat_Min,               //Minutes only e.g. "10m"
+    TimeFormat_Hour,              //Hours only e.g. "10h"
+    TimeFormat_Day,               //Days only e.g. "10d"
+
+    TimeFormat_Sec_ms,            //Seconds and milliseconds e.g. "10s 305ms"
+    TimeFormat_Min_Sec,           //Minutes and seconds e.g. "10m 30s"
+    TimeFormat_Hour_Min_Sec,      //Hours, minutes and seconds e.g. "5h 10m 3s"
+    TimeFormat_Day_Hour_Min_Sec,  //Days, hours, minutes and seconds e.g. "4d 7h 37m 9s"
+};
+
+```
 
 ### FilePaths.h
 
