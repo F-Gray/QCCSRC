@@ -9,6 +9,7 @@ Libraries for high performance scientific computing, developed in the Qatar Carb
 ## Table of Contents
 
 * [About](#About)
+* [Getting Started](#Getting--Started)
 * [Libraries](#Libraries)
 * [Contact](#Contact)
 
@@ -26,17 +27,40 @@ The C++ header files included here are used in codes developed within the Qatar 
 
 All libraries are compatible with both Linux and Windows systems.
 
+## Getting Started
+
+These static library files can easily be used in a project by including the relevant files, as shown
+
+```C++
+
+#include <InputFile.h>          //Reads input files
+#include <DataFiles.h>          //Buffered file reading and writing with array transformation
+#include <Timer.h>              //Accurate timing
+#include <Threads.h>            //Local multi-threading
+#include <FilePaths.h>		//Combines folder and file strings
+#include <Grids.h>              //Manipulate 3D grids
+#include <Decomposition.h>      //Lattice decomposition
+
+#include <GridsMPI.h>		//Manipulate 3D grids distributed over MPI systems
+#include <TopologyMPI.h>        //Map topology of MPI system (no GPUs)
+
+#include <TopologyMPI.cuh>      //Map topology of MPI GPU system
+
+```
+
+The libraries <b>GridsMPI.h</b>, <b>TopologyMPI.h</b> and <b>TopologyMPI.cuh</b> are only usable if MPI libraries are included, and the library <b>TopologyMPI.cuh</b> also requires CUDA to be used
+
 ## Libraries
 
 ### InputFile.h
 
 This class provides a way to read input parameters from a file. It allows a free form structure to be used, and supports both simple data types, arrays and complex nested data-structures.
 
-#### Example with simple data
+#### 1. Example with simple data
 
 Here is an example with simple data to be read in from Input.txt.
 
-1. <b>Input.txt</b> containing data to be read in
+1.1 <b>Input.txt</b>
 
   Input values are assigned to named variables using the syntax below, and comments can also be added using C style '//'
     
@@ -58,7 +82,7 @@ ListFlt2 = { 0.035                //...or spread over multiple lines using curly
              5.243 }
 ```
 
-2. <b>InputFile.cpp</b>
+1.2 <b>InputFile.cpp</b>
 
 In our cpp file we can define the variables to be read in using the <i>InputValueStructEx</i> struct and use the <i>InputFileReader</i> class to perform the read.
 
@@ -152,11 +176,11 @@ enum InputFileDataType{
 };
 ```
 
-#### Example with complex data
+#### 2. Example with complex data
 
 The <i>InputFileReader</i> class also supports reading nested data structures, as shown in the following example
 
-1. <b>Input.txt</b> containing data to be read in
+2.1 <b>Input.txt</b>
 
   Multiple levels of structures can be defined using curly brackets
     
@@ -177,7 +201,7 @@ ComplexData = {   { Name = "Item1"                     //Each element contains a
 
 Datasets such as this can be read in by setting the <i>DataType</i> = DataType_InputValueStructEx in <i>InputValueStructEx</i>, as shown in the following code
   
-  2. <b>InputFile.cpp</b>
+  2.2 <b>InputFile.cpp</b>
 
 ```C++
 ...
