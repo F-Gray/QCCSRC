@@ -184,7 +184,7 @@ Datasets such as this can be read in by setting the <i>DataType</i> = DataType_I
 
 //Input file values will be read into these variables
 
-struct SubDataStruct{    //This defines the data within each complex data element
+struct DataStruct{    //This defines the data within each complex data element
   char Name[256];
   int Value;
   float Flt[6];
