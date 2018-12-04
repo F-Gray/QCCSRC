@@ -247,6 +247,14 @@ Notice how pointers to data locations in the sub data <i>InputValueStructEx</i> 
 
 #### 3. Example with MPI threads
 
+If MPI is used, and the preprocessor definition MPI_INCLUDED is defined, then a second constructor for the InputFileReader class becomes available
+
+```C++
+InputFileReader(MPI_Comm Comm, int SrcThread);
+```
+
+All MPI threads initialise the class using the group communicator <i>Comm</i> and the index of the thread which will perform the file read. All threads then call the member function ReadInputFile(...) as in example 1.2, and this now automatically distributes the parameters read from the input file to all threads, and makes the result of GetErrorCode() available to all threads.
+
 ### DataFiles.h
 
 ### Grids.h
@@ -256,6 +264,88 @@ Notice how pointers to data locations in the sub data <i>InputValueStructEx</i> 
 ### Decomposition.h
 
 ### Threads.h
+
+This defines a class called <i>Threads</i> which creates local threads and a <i>Mutex</i> class for synchronisation. It provides similar capabilities to the C++11 library <Thread>, however the <i>Threads</i> class has its own inter-thread synchronisation routines built in which simplifies coding for highly parallel applications.
+
+#### 1. Example with thread creation and synchronisation
+
+In this example, we use the <i>Threads</i> class to create a number of parallel threads, and demonstrate the synchronisation routines
+
+```C++
+
+int ThreadWork(Threads::Thread* thread){                             //Runs with multiple threads
+        
+    int Arg = *((int*)thread->Data);
+
+    printf("Thread Id = %i with argument %i\n", thread->Id, Arg);
+        
+    thread->SyncThreads();                                           //Synchronise threads
+
+    printf("Finished (%i)\n", thread->Id);
+
+    return 0;
+}
+
+
+int main(){
+
+    Threads Worker;           //Initialise a Threads class
+
+    int Arg = 3;              //Data passed to thread
+
+    Worker.RunThreads(4, ThreadWork, &Arg);   //Runs 'ThreadWork' with 4 threads
+
+    return 0;
+}
+
+```
+The Threads class is initialised and then the member function RunThreads is called which creates n threads. The ThreadWork function recieves a single parameter of type Threads::Thread which contains the following members
+
+```C++
+void* Threads::Thread::Data;                       //The argument passed by RunThreads(...)
+int   Threads::Thread::Id;                         //Thread index (from 0 to n-1)
+int   Threads::Thread::nThreads;                   //The number of threads running
+
+void  Threads::Thread::SyncThreads();              //Block until all running threads reach this point
+void  Threads::Thread::SyncThreads(int* nActive);  //Same as SyncThreads() but returns the current number of running threads in *nActive
+```
+
+These members allow each thread to know its index, the number of threads running as well as synchronize with one another. If some threads return before reaching SyncThreads(), then only running threads will wait, and the overload SyncThreads(int* nActive) can be used to determine how many threads are still running.
+
+The Threads::RunThreads(...) function has multiple variants. RunThreads(...) functions block until all threads have returned, whereas the RunThreadsAsync(...) functions return immediately after creating the threads, which now run in parallel to the host thread.
+
+```C++
+bool Threads::RunThreads(int n, int (*Addr)(Threads::Thread*) );                 //Run n threads at Addr 
+bool Threads::RunThreads(int n, int (*Addr)(Threads::Thread*), void* Data);      //Run n threads at Addr and pass Data as argument (copied to void* Threads::Thread::Data)
+
+bool Threads::RunThreadsAsync(int n, int (*Addr)(Threads::Thread*) );            //Same as RunThreads but returns immediately
+bool Threads::RunThreadsAsync(int n, int (*Addr)(Threads::Thread*), void* Data); 
+```
+
+The Threads class exposes two further synchronisation routines for the host thread, once RunThreadsAsync has been called. These are
+
+```C++
+bool Threads::IsRunning();                  //Check if any threads are still running
+bool Threads::ThreadIsRunning(int tId);     //Check if thread with index tId is running
+
+void Threads::WaitFinish();                 //Wait for all threads to complete
+```
+
+Finally, the host thread can obtain the int return value of any of the threads using
+
+```C++
+int ThreadReturnValue(int tId);             //Returns the return value of thread with index tId
+```
+
+#### 2. Mutex class
+
+The <i>Threads.h</i> library also contains a simple mutex class with a lock function which can be used to control access to resources in a system with multiple threads. Its members are
+
+```C++
+Mutex::Mutex();                //Default constructor
+
+void Mutex::Lock(bool Lock);   //Acquire the lock (Lock = true) or release the lock (Lock = false)
+```
 
 ### Timer.h
 
