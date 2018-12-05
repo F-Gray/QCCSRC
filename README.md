@@ -261,6 +261,100 @@ All MPI threads initialise the class using the group communicator <i>Comm</i> an
 
 ### Grids.h
 
+The <i>Grid</i> class provides a container for 3D (as well as 2D and 1D) datasets. It also provides useful capabilities for distributed computing applications, such as the ability to extract subvolumes with extra 'ghost' layers which may be over loop boundaries.
+
+#### 1. Example of 3D grid
+
+The following example creates a 3D grid of type int and reads and writes data from a file.
+
+```C++
+
+int main(){
+
+    Grid<int> DataSet(100, 100, 100);      //Creates a 3D dataset of dimensions 100 x 100 x 100, with a single component
+
+    DataSet.ReadFromFile("C:/Data.raw", true, DataFileBase::Type_char);   //Reads 8-bit data from file in binary format and automatically converts it to int
+    
+    for(int z=0; z<100; z++)
+    for(int y=0; y<100; y++)
+    for(int x=0; x<100; x++){
+    
+	    DataSet(x, y, z) += 2;         //The () operator can be used to return a reference to a particular value
+    
+    }
+
+    DataSet.WriteToFile("C:/DataOut.raw", true, false);  //Writes data in 32-bit int binary format
+
+    return 0;
+}
+```
+A number of different constructors are available
+```C++
+Grid<class T>(int SizeX,  int SizeY, int SizeZ, int VectorSize);                          //Create grid of dimensions SizeX x SizeY x SizeZ with VectorSize components
+Grid<class T>(long long SizeX,  long long SizeY, long long SizeZ, long long VectorSize);
+Grid<class T>(int SizeX,  int SizeY, int SizeZ);                                          //Create grid of dimensions SizeX x SizeY x SizeZ with a single component
+Grid<class T>(long long SizeX,  long long SizeY, long long SizeZ);
+Grid<class T>(int SizeX,  int SizeY);                                                     //Create grid of dimensions SizeX x SizeY with a single component
+Grid<class T>(long long SizeX,  long long SizeY);
+Grid<class T>(int SizeX);                                                                 //Create 1D array of SizeX elements
+Grid<class T>(long long SizeX);
+
+Grid<class T>(Grid<T> &GridRef);                     //Create grid copied from GridRef (reference)
+Grid<class T>(Grid<T>* GridRef);                     //Create grid copied from GridRef (pointer)
+Grid<class T>(Grid<T> &GridRef, GridRegion Region);  //Create grid copied from a subregion Region of GridRef (reference)
+Grid<class T>(Grid<T> &GridRef, Coarsegrain CG_Op);  //Create grid GridRef (reference) coarsegrained
+
+//Create a grid from the array DataArr, of dimensions SizeX x SizeY x SizeZ with VectorSize components, either deep copy (new array allocated) or shallow copy (pointer copied), which will be deleted by the destructor if FreeShallowCopy = true
+Grid<class T>(T* DataArr, bool ShallowCopy, bool FreeShallowCopy, long long SizeX,  long long SizeY, long long SizeZ, long long VectorSize);
+
+```
+
+A reference to the data at a particular coordinate can be obtained using the bracket operator (), as in example 1. This has multiple overloads. T here is the grid type
+
+```C++
+
+T& operator()(long long X, long long Y, long long Z, long long n);  //Returns reference to value at X, Y, Z component n
+T& operator()(int X, int Y, int Z, int n);
+T& operator()(long long X, long long Y, long long Z);
+T& operator()(int X, int Y, int Z);
+T& operator()(long long X, long long Y);
+T& operator()(int X, int Y);
+T& operator()(long long X);
+T& operator()(int X);
+
+```
+
+Likewise, two methods <i>Get</i> and <i>GetPtr</i> can be used to obtain the value and pointer to the value at a particular coordinate respectively. These have the same overloads as the () operator
+
+```C++
+T Get(long long X, long long Y, long long Z, long long n);      //Get value at X, Y, Z, component n
+
+T* GetPtr(long long X, long long Y, long long Z, long long n);  //Get pointer to element at X, Y, Z, component n
+```
+
+A number of functions are also available to set the value at a particular coordinate. These have the same overloads as the Get functions, except that the extra parameter </i>Value</i> is always included as the last parameter
+
+```C++
+void Set(long long X, long long Y, long long Z, long long n, T Value); //Set value at X, Y, Z, component n
+```
+
+Values can also be set throughout the grid, or in specific regions using the <i>SetAll</i> function. Similarly, value replacement can be performed using <i>ReplaceValue</i>, and the function <i>ScaleValues</i> can be used to multiply all values by a given factor
+
+```C++
+void SetAll(T Value);                          //Set all to Value
+void SetAll(T Value[]);                        //Set all to Value[], with n components
+void SetAll(T Value, GridRegion Region);       //Set all to Value in Region
+void SetAll(T Value[], GridRegion Region);     //Set all to Value[], with n components in Region      
+
+void ReplaceValue(T ValueFind, T ValueReplace);                        //Replace all ValueFind with ValueReplace
+void ReplaceValue(T ValueFind[], T ValueReplace[]);                    //Replace all ValueFind[] with ValueReplace[] (vectors with n components)
+void ReplaceValue(T ValueFind, T ValueReplace, GridRegion Region);     //Replace all ValueFind with ValueReplace in Region
+void ReplaceValue(T ValueFind[], T ValueReplace[], GridRegion Region); //Replace all ValueFind[] with ValueReplace[] (vectors with n components) in Region
+
+void ScaleValues(T Scale);                         //Multiply all values by Scale
+void ScaleValues(T Scale, GridRegion Region);      //Multiply all values by Scale in Region
+```
+
 ### GridsMPI.h
 
 ### Decomposition.h
@@ -336,7 +430,7 @@ void Threads::WaitFinish();                 //Wait for all threads to complete
 Finally, the host thread can obtain the int return value of any of the threads using
 
 ```C++
-int ThreadReturnValue(int tId);             //Returns the return value of thread with index tId
+int Threads::ThreadReturnValue(int tId);    //Returns the return value of thread with index tId
 ```
 
 #### 2. Mutex class
@@ -353,7 +447,7 @@ void Mutex::Lock(bool Lock);   //Acquire the lock (Lock = true) or release the l
 
 This file provides a simple high resolution timer class called <i>SimulationTimer</i>, which compatible with both Linux and Windows.
 
-1. Example
+#### 1. Example
 
 ```C++
 
