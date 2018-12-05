@@ -288,6 +288,8 @@ int main(){
     return 0;
 }
 ```
+#### 2. Grid Members
+
 A number of different constructors are available
 ```C++
 Grid<class T>(int SizeX,  int SizeY, int SizeZ, int VectorSize);                          //Create grid of dimensions SizeX x SizeY x SizeZ with VectorSize components
@@ -309,51 +311,102 @@ Grid<class T>(T* DataArr, bool ShallowCopy, bool FreeShallowCopy, long long Size
 
 ```
 
-A reference to the data at a particular coordinate can be obtained using the bracket operator (), as in example 1. This has multiple overloads. T here is the grid type
+A reference to the data at a particular coordinate can be obtained using the bracket operator (), as in example 1. This has multiple overloads.
 
 ```C++
 
-T& operator()(long long X, long long Y, long long Z, long long n);  //Returns reference to value at X, Y, Z component n
-T& operator()(int X, int Y, int Z, int n);
-T& operator()(long long X, long long Y, long long Z);
-T& operator()(int X, int Y, int Z);
-T& operator()(long long X, long long Y);
-T& operator()(int X, int Y);
-T& operator()(long long X);
-T& operator()(int X);
+T& Grid<class T>::operator()(long long X, long long Y, long long Z, long long n);  //Returns reference to value at X, Y, Z component n
+T& Grid<class T>::operator()(int X, int Y, int Z, int n);
+T& Grid<class T>::operator()(long long X, long long Y, long long Z);
+T& Grid<class T>::operator()(int X, int Y, int Z);
+T& Grid<class T>::operator()(long long X, long long Y);
+T& Grid<class T>::operator()(int X, int Y);
+T& Grid<class T>::operator()(long long X);
+T& Grid<class T>::operator()(int X);
 
 ```
 
 Likewise, two methods <i>Get</i> and <i>GetPtr</i> can be used to obtain the value and pointer to the value at a particular coordinate respectively. These have the same overloads as the () operator
 
 ```C++
-T Get(long long X, long long Y, long long Z, long long n);      //Get value at X, Y, Z, component n
+T Grid<class T>::Get(long long X, long long Y, long long Z, long long n);      //Get value at X, Y, Z, component n
 
-T* GetPtr(long long X, long long Y, long long Z, long long n);  //Get pointer to element at X, Y, Z, component n
+T* Grid<class T>::GetPtr(long long X, long long Y, long long Z, long long n);  //Get pointer to element at X, Y, Z, component n
 ```
 
 A number of functions are also available to set the value at a particular coordinate. These have the same overloads as the Get functions, except that the extra parameter </i>Value</i> is always included as the last parameter
 
 ```C++
-void Set(long long X, long long Y, long long Z, long long n, T Value); //Set value at X, Y, Z, component n
+void Grid<class T>::Set(long long X, long long Y, long long Z, long long n, T Value); //Set value at X, Y, Z, component n
 ```
 
 Values can also be set throughout the grid, or in specific regions using the <i>SetAll</i> function. Similarly, value replacement can be performed using <i>ReplaceValue</i>, and the function <i>ScaleValues</i> can be used to multiply all values by a given factor
 
 ```C++
-void SetAll(T Value);                          //Set all to Value
-void SetAll(T Value[]);                        //Set all to Value[], with n components
-void SetAll(T Value, GridRegion Region);       //Set all to Value in Region
-void SetAll(T Value[], GridRegion Region);     //Set all to Value[], with n components in Region      
+void Grid<class T>::SetAll(T Value);                          //Set all to Value
+void Grid<class T>::SetAll(T Value[]);                        //Set all to Value[], with n components
+void Grid<class T>::SetAll(T Value, GridRegion Region);       //Set all to Value in Region
+void Grid<class T>::SetAll(T Value[], GridRegion Region);     //Set all to Value[], with n components in Region      
 
-void ReplaceValue(T ValueFind, T ValueReplace);                        //Replace all ValueFind with ValueReplace
-void ReplaceValue(T ValueFind[], T ValueReplace[]);                    //Replace all ValueFind[] with ValueReplace[] (vectors with n components)
-void ReplaceValue(T ValueFind, T ValueReplace, GridRegion Region);     //Replace all ValueFind with ValueReplace in Region
-void ReplaceValue(T ValueFind[], T ValueReplace[], GridRegion Region); //Replace all ValueFind[] with ValueReplace[] (vectors with n components) in Region
+void Grid<class T>::ReplaceValue(T ValueFind, T ValueReplace);                        //Replace all ValueFind with ValueReplace
+void Grid<class T>::ReplaceValue(T ValueFind[], T ValueReplace[]);                    //Replace all ValueFind[] with ValueReplace[] (vectors with n components)
+void Grid<class T>::ReplaceValue(T ValueFind, T ValueReplace, GridRegion Region);     //Replace all ValueFind with ValueReplace in Region
+void Grid<class T>::ReplaceValue(T ValueFind[], T ValueReplace[], GridRegion Region); //Replace all ValueFind[] with ValueReplace[] (vectors with n components) in Region
 
-void ScaleValues(T Scale);                         //Multiply all values by Scale
-void ScaleValues(T Scale, GridRegion Region);      //Multiply all values by Scale in Region
+void Grid<class T>::ScaleValues(T Scale);                         //Multiply all values by Scale
+void Grid<class T>::ScaleValues(T Scale, GridRegion Region);      //Multiply all values by Scale in Region
 ```
+#### 3. GridRegion
+
+The <i>GridRegion</i> struct can be used to specify a 3D region and has the following constructors
+
+```C++
+GridRegion::GridRegion(long long XStart, long long XEnd, long long YStart, long long YEnd, long long ZStart, long long ZEnd);
+GridRegion::GridRegion(int XStart, int XEnd, int YStart, int YEnd, int ZStart, int ZEnd);
+GridRegion::GridRegion(long long XStart, long long XEnd, long long YStart, long long YEnd);
+GridRegion::GridRegion(int XStart, int XEnd, int YStart, int YEnd);
+GridRegion::GridRegion(long long XStart, long long XEnd);
+GridRegion::GridRegion(int XStart, int XEnd);
+GridRegion::GridRegion();
+```
+The default range for directions not specified in the constructor parameters is 0, 1.
+
+Individual ranges can be set using
+
+```C++
+void GridRegion::SetRangeX(long long XStart, long long XEnd);  //Set range in X
+void GridRegion::SetRangeY(long long YStart, long long YEnd);  //Set range in Y
+void GridRegion::SetRangeZ(long long ZStart, long long ZEnd);  //Set range in Z
+```
+
+This struct can also be used to compute a number of useful metrics
+
+```C++
+long long GridRegion::SizeX();         //Size in X
+long long GridRegion::SizeY();         //Size in Y
+long long GridRegion::SizeZ();         //Size in Z
+
+long long GridRegion::CountCells();    //Number of cells contained in region
+bool GridRegion::IsZero();             //Size is 0 in all directions
+
+bool GridRegion::Contains(long long x, long long y, long long z);  //Whether coordinate is within this region
+bool GridRegion::TestOverlap(GridRegion& Region);  //Whether Region (ref) overlaps with this region
+bool GridRegion::TestOverlap(GridRegion* Region);  //Whether Region (ptr) overlaps with this region
+bool GridRegion::FitsWithin(GridRegion& Region);   //Whether Region (ref) fits entirely within this region
+bool GridRegion::FitsWithin(GridRegion* Region);   //Whether Region (ptr) fits entirely within this region
+```
+
+New regions can be computed from the following operations
+
+```C++
+GridRegion GridRegion::Translate(long long dx, long long dy, long long dz);  //Return new GridRegion translated by dx, dy, dz
+GridRegion GridRegion::Overlap(GridRegion& Region);         //Return new GridRegion equal to the overlap of Region (ref) with this GridRegion
+GridRegion GridRegion::Overlap(GridRegion* Region);         //Return new GridRegion equal to the overlap of Region (ptr) with this GridRegion
+```
+
+#### 4. Grid Transformations
+
+A useful capability of the <i>Grid</i> class is the ability to perform coarsegraining operations, extract subgrids and perform inversions in Cartesian directions.
 
 ### GridsMPI.h
 
