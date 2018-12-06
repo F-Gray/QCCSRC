@@ -11,7 +11,7 @@ Figure: Fluid flow velocity distribution (middle) and reactant concentration dis
 ## Table of Contents
 
 * [About](#About)
-* [Getting Started](#Getting~~Started)
+* [Getting Started](#Getting-Started)
 * [Libraries](#Libraries)
 * [Contact](#Contact)
 
@@ -406,7 +406,79 @@ GridRegion GridRegion::Overlap(GridRegion* Region);         //Return new GridReg
 
 #### 4. Grid Transformations
 
-A useful capability of the <i>Grid</i> class is the ability to perform coarsegraining operations, extract subgrids and perform inversions in Cartesian directions.
+A useful capability of the <i>Grid</i> class is the ability to perform coarsegraining operations, extract subgrids and perform inversions in Cartesian directions. In this example, we read in a grid from a file, and scale the image down.
+
+```C++
+int main(){
+
+    int SzX = 100;
+    int SzY = 100;
+    int SzZ = 100;
+
+    Grid<float> DataSet(SzX, SzY, SzZ);      //Creates a 3D dataset of dimensions 100 x 100 x 100, with a single component
+
+    DataSet.ReadFromFile("C:/Dataset.raw", true);   //Reads 32-bit float data from file in binary format
+    
+    double ImageScale = 1.5;    //Reduce 3D image size by factor of 1.5
+    
+    int SzXCG = (int)(SzX / ImageScale);
+    int SzYCG = (int)(SzY / ImageScale);
+    int SzZCG = (int)(SzZ / ImageScale);
+    
+    CoarseGrain CG(SzXCG, SzYCG, SzZCG, false);   //Define a coarsegraining operation, specifying new grid size and set discrete mode to false
+    
+    Grid<float> DataSetGC(DataSet, CG);     //Creates a new grid containing a coarsegrained version of DataSet
+
+    DataSetGC.WriteToFile("C:/DatasetOut.raw", true, false);  //Writes data in 32-bit float binary format
+
+    return 0;
+}
+```
+
+In the above code, we use the coarsegraining constructor to create a new, scaled down version of the initial dataset. The <i>CoarseGrain</i> struct can be initialised using
+
+```C++
+Coarsegrain::Coarsegrain(long long SizeX, long long SizeY, long long SizeZ, bool DiscreteMode);
+Coarsegrain::Coarsegrain(int SizeX, int SizeY, int SizeZ, bool DiscreteMode);
+Coarsegrain::Coarsegrain(long long SizeX, long long SizeY, long long SizeZ);
+Coarsegrain::Coarsegrain(int SizeX, int SizeY, int SizeZ);
+```
+
+SizeX, SizeY and SizeZ define the new size of the grid, which must be less than the original, but not necessarily by the same factors. When DiscreteMode = true, coarsegrained cells contain the mode value of their overlap on the original grid, otherwise they use the average value. DiscreteMode = true is useful for preserving the values in discrete e.g. integer datasets, whereas the continuous average is useful for smoothing over interfaces. The default value is DiscreteMode = false.
+
+In preference to using constructors, the <i>Grid</i> class can read in from other <i>Grid</i> instances using the following member functions
+
+```C++
+void Grid::ReadGridCoarsegrained(Grid& GridRef, Coarsegrain CG_Op);                       //Read coarsegrained version of GridRef into Grid
+void Grid::ReadGridCoarsegrained(Grid& GridRef, Coarsegrain CG_Op, GridPosition Offset);  //Read coarsegrained version of GridRef into Grid at Offset position
+
+void Grid::ReadSubGrid(Grid& GridRef, GridRegion Region);                                     //Read Region of GridRef into Grid
+void Grid::ReadSubGrid(Grid& GridRef, GridRegion Region, GridPosition Offset);                //Read Region of GridRef into Grid at Offset position
+void Grid::ReadSubGrid(Grid& GridRef, GridRegion Region, GridPosition Offset, bool Flip[3]);  //Read Region of GridRef into Grid at Offset position and invert in specified Cartesian directions
+
+void Grid::ReadGrid(Grid& GridRef);                                      //Read GridRef into Grid
+void Grid::ReadGrid(Grid& GridRef, GridPosition Offset);                 //Read GridRef into Grid at Offset position
+void Grid::ReadGrid(Grid& GridRef, GridPosition Offset, bool Flip[3]);   //Read GridRef into Grid at Offset position abd invert in specified Cartesian directions
+```
+
+The <i>GridPosition</i> struct defines a position at X, Y, Z and has the constructors and members
+
+```C++
+long long GridPosition::x;    //Coordinates
+long long GridPosition::y;
+long long GridPosition::z;
+
+GridPosition::GridPosition(long long X, long long Y, long long Z);
+GridPosition::GridPosition(int X, int Y, int Z);
+GridPosition::GridPosition(long long X, long long Y);               //Default Z = 0
+GridPosition::GridPosition(int X, int Y);
+GridPosition::GridPosition(long long X);                            //Default Y and Z = 0
+GridPosition::GridPosition(int X);
+
+long long GridPosition::operator[](int i);  //Return x, y, or z coordinate for i = 0, 1, or 2 respectively
+```
+
+
 
 ### GridsMPI.h
 
