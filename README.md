@@ -482,6 +482,91 @@ long long GridPosition::operator[](int i);  //Return x, y, or z coordinate for i
 
 ### GridsMPI.h
 
+The <i>GridMPI</i> class is particularly useful for handling very large datasets on distributed systems. This is because the 3D grid is automatically partitioned and distributed amongst MPI threads, meaning that bottlenecks due to single node memory limitations are avoided.
+
+#### 1. Example
+
+This simple example creates a <i>GridMPI</i> class, reads in a dataset and operates on it before writing to another file. By passing the MPI_Comm parameter, the class transparently performs a grid partitioning and distribution over all MPI threads in the communicator group.
+
+```C++
+
+int main(int argc, char *argv[]){
+
+    //MPI Initialisation
+
+    MPI_Init(&argc, &argv);
+    
+    int nThreads;
+    int tId;
+    
+    MPI_Comm_size(MPI_COMM_WORLD, &nThreads);	//Get number of threads running
+    MPI_Comm_rank(MPI_COMM_WORLD, &tId);	//Get thread ID (index from 0 -> nThreads-1)
+    
+    //GridMPI
+    
+    int GridSz[3] = {100, 100, 100};
+    
+        //Create GridMPI distributed over all MPI threads
+
+    GridMPI<float> DataSet(MPI_COMM_WORLD,        //MPI Communicator
+                           0,                     //MPI tag threads will use internally for communicating
+			   GridSz[0],             //Grid size
+			   GridSz[1],
+			   GridSz[2],
+			   1                  );  //Number of vector components
+
+    //Read data from file
+
+    DataSet.ReadFromFile("C:/DataSet.raw", true, 0);   //Uses MPI thread 0 to read from file and transparently distributes amongst all threads
+
+    //Operate on data
+    
+    GridRegion Rgn( 25, 75,
+                    25, 75,
+                    25, 75  );  //Central cube region
+		   
+    long long Count = DataSet.CountOccurences((float)0.0f, Rgn);   //Counts 0 values in GridRegion
+    
+    if(tId == 0)
+        printf("Counted %lli zeros in region (%s)\n", Count, Rgn.ToStr());
+	
+    DataSet.SetAll(1.0f, Rgn);   //Set all values in GridRegion
+    
+    //Write to file
+    
+    DataSet.WriteToFile("C:/DataSetOut.raw", true, false, 0);  //Thread 0 writes file, data transparently coalesced from all threads
+    
+    MPI_Finalize();
+    
+    return 0;
+}
+
+```
+
+When the dataset is read in from a file, the class automatically distributes the data to the other threads, depending on their partitions. This is done in a buffered way which minimises extra memory usage on the reading thread. The same applies to the file writing operation.
+
+The <i>GridMPI</i> class also exposes similar data operations to the <i>Grid</i> class, such as counting and set functions which can work on subregions. In this case, operations on a single subregion may involve some or all of the MPI threads, depending how the dataset has been distributed internally. In cases where more specific, user-defined operations are needed, the class makes available information on the distribution of data as an array of <i>GridRegion</i> structs
+
+```C++
+GridRegion* GridMPI<class T>::Regions;
+```
+
+Each entry in this array is the region of the overall grid located on the MPI thread with the corresponding rank. The following members can then be used to work locally on the data at each MPI thread.
+
+```C++
+T*       GridMPI<class T>::Data;       //The internal array of data on local MPI thread
+Grid<T>* GridMPI<class T>::GridLocal;  //Grid class container for Data
+
+void     GridMPI<class T>::CoordGlobalToLocal(int Pos[3]);             //Transforms a global coordinate to local data coordinate
+void     GridMPI<class T>::CoordGlobalToLocal(int* x, int* y, int* z);
+void     GridMPI<class T>::CoordLocalToGlobal(int Pos[3]);             //Transforms a local data coordinate to global coordinate
+void     GridMPI<class T>::CoordLocalToGlobal(int* x, int* y, int* z);
+```
+
+The member functions <i>CoordGlobalToLocal</i> and <i>CoordLocalToGlobal</i> can be used to map coordinates on the global grid to the corresponding coordinate in the local data grid, and vice versa. The <i>GridLocal</i> member exposes a <i>Grid</i> class which contains the local data.
+
+
+
 ### Decomposition.h
 
 ### Threads.h
