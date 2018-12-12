@@ -611,6 +611,57 @@ A single MPI thread whose index is ReadThread (or WriteThread) performs the actu
 
 ### Decomposition.h
 
+The <i>Decomposition</i> class performs 1D, 2D and 3D grid decomposition using node-weighted size balancing. It has 3 main operating modes: 1) using <i>Grid</i> data on a single-threaded system, 2) using <i>Grid</i> data on a multithreaded MPI system and 3) using <i>GridMPI</i> data on a multithreaded MPI system. It also implements methods to map regions of neighbouring partitions where data transfer is needed, and distrbute and recombine data grids over MPI threads.
+
+#### 1. Example of node-weighted domain decomposition on a single thread
+
+```C++
+
+int main(){
+
+    int GridSzX = 100;                                 //Grid size
+    int GridSzY = 100;
+    int GridSzZ = 100;
+    
+    
+    //Read in dataset
+    
+    Grid<int> DataSet(GridSzX, GridSzY, GridSzZ);      //Create Grid to contain 3D dataset
+    
+    int ret = DataSet.ReadFromFile("C:/DataSet.raw", true);      //Read in dataset from file
+    
+    if(ret != 0){
+        printf("Unable
+    }
+    
+    //Perform grid decomposition
+    
+    int nPartitions = 16;                              //Number of partitions to divide grid into
+    
+    char DecompStr[] = "zyx";			       //Decomposition mode: hierarchical, first in z then y then x
+    
+    int ActiveCellsList[] = {0, 1};                    //Declare values 0 and 1 as active cells
+
+    Decomposition<int> Decomp(Geometry, nPartitions, DecompStr, ActiveCellsList, 2);  //Decomposition constructor performs the decomposition
+
+    if(!Decomp.Success){
+        printf("Grid decomposition failed\n");
+        return 0;
+    }
+    
+    
+    //Obtain subregions
+    
+    for(int i=0; i<nPartitions; i++){
+    
+    
+    
+    }
+
+    return 0;
+}
+```
+
 ### Threads.h
 
 This defines a class called <i>Threads</i> which creates local threads and a <i>Mutex</i> class for synchronisation. It provides similar capabilities to the C++11 thread library, however the <i>Threads</i> class has its own inter-thread synchronisation routines built in which simplifies coding for highly parallel applications.
