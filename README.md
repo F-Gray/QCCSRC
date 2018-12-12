@@ -543,7 +543,13 @@ int main(int argc, char *argv[]){
 
 ```
 
-When the dataset is read in from a file, the class automatically distributes the data to the other threads, depending on their partitions. This is done in a buffered way which minimises extra memory usage on the reading thread. The same applies to the file writing operation.
+When the dataset is read in from a file, the class automatically distributes the data to the other threads, depending on their partitions. This is done in a buffered way which minimises extra memory usage on the reading thread. The same applies to the file writing operation. The maximum size of the buffer can be set using
+
+```C++
+void GridMPI<class T>::SetMaxBufferSize(long long BufSizeBytes);
+```
+
+The default size is 32 MB, and the maximum value which can be set is 2 GB.
 
 The <i>GridMPI</i> class also exposes similar data operations to the <i>Grid</i> class, such as counting and set functions which can work on subregions. In this case, operations on a single subregion may involve some or all of the MPI threads, depending how the dataset has been distributed internally. In cases where more specific, user-defined operations are needed, the class makes available information on the distribution of data as an array of <i>GridRegion</i> structs
 
@@ -565,7 +571,43 @@ void     GridMPI<class T>::CoordLocalToGlobal(int* x, int* y, int* z);
 
 The member functions <i>CoordGlobalToLocal</i> and <i>CoordLocalToGlobal</i> can be used to map coordinates on the global grid to the corresponding coordinate in the local data grid, and vice versa. The <i>GridLocal</i> member exposes a <i>Grid</i> class which contains the local data.
 
+The <i>GridMPI</i> class also implements members to obtain, read in and move subgrid regions.
 
+```C++
+void GridMPI<class T>::ObtainSubGrid(Grid<T>& GridOut, GridRegion Region);                                          //Obtain data in Region in local Grid GridOut
+void GridMPI<class T>::ObtainSubGrid(Grid<T>& GridOut, GridRegion Region, GridPosition OffsetOut);                  //Obtain data in Region in local Grid GridOut offset by OffsetOut
+void GridMPI<class T>::ObtainSubGrid(Grid<T>& GridOut, GridRegion Region, GridPosition OffsetOut, int Boundary[6]); //Obtain data in Region in local Grid GridOut at offset OffsetOut, including extra boundary layers
+
+void GridMPI<class T>::ReadSubGrid(Grid<T>& GridRef, GridRegion Region);                                        //Read local GridRef into Region of global grid
+void GridMPI<class T>::ReadSubGrid(Grid<T>& GridRef, GridRegion Region, GridPosition ReadOffset);               //Read from local GridRef, at offset ReadOffset into Region of global grid
+void GridMPI<class T>::ReadSubGrid(Grid<T>& GridRef, GridRegion Region, GridPosition ReadOffset, bool Flip[3]); //Read from local GridRef, at offset ReadOffset into Region of global grid and invert in specified Cartesian directions
+
+void GridMPI<class T>::CopyRegion(GridRegion RegionFrom, GridPosition PosTo);                //Move data in RegionFrom to new position PosTo in global grid
+void GridMPI<class T>::CopyRegion(GridRegion RegionFrom, GridPosition PosTo, bool Flip[3]);  //Move data in RegionFrom to new position PosTo in global grid and invert in specified Cartesian directions
+```
+
+<i>ObtainSubGrid</i> functions extract regions from the grid into local <i>Grid</i> classes. This is done on a per-thread basis, meaning that each MPI thread may specify its own GridRegion to extract, and this will be copied from the global grid into the local <i>Grid</i> GridOut. This function includes the possibility of specifying extra boundary layers using the int Boundary[6] parameter. These specify a thickness in +X, -X, +Y, -Y, +Z and -Z respectively of extra nodes which are copied from the global geometry. The advantage of using this parameter is that extra boundary nodes will be obtained from over the grid boundaries if necessary. This is useful for obtaining extra "ghost" data transfer layers using loop boundary conditions in simulation models.
+
+<i>ReadSubGrid</i> functions read data from local <i>Grid</i> data into the global grid. This is again done on a per-thread basis, so individual threads specify the <i>GridRegion</i> their data is written to. The optional bool Flip[3] parameter can flip the data in each of the 3 Cartesian directions.
+
+Regions of the global grid can also be coped from one position to another using the <i>CopyRegion</i> function, again with the option to flip the data in the Cartesian directions. All MPI threads must specify the same regions and positions for this function.
+
+Note that for <i>ObtainSubGrid</i>, <i>ReadSubGrid</i> and <i>CopyRegion</i> functions, all MPI threads in the MPI_Comm group must make simultaneous calls. If a thread does not need to read or write data using <i>ObtainSubGrid</i> and <i>ReadSubGrid</i>, it can specify a zero region (e.g. GridRegion(0, 0, 0, 0, 0, 0)). This because the threads may be needed internally to transfer data to other threads.
+
+These functions are optimised for large-scale parallel systems, which may have thousands of threads. The implementation of these functions runs internal copy operations in parallel, using sub-groups of threads depending on the overlap of the required regions with the data partitions.
+
+File read and write members are
+
+```C++
+int GridMPI<class T>::ReadFromFile(char* FileName, bool Binary, int ReadThread);                                            //Read data from file
+int GridMPI<class T>::ReadFromFile(char* FileName, bool Binary, GridRegion Region, int ReadThread);                         //Read data from file into GridRegion of grid
+int GridMPI<class T>::ReadFromFile(char* FileName, bool Binary, DataType FileDataType, GridRegion Region, int ReadThread);  //Read data from file into GridRegion of grid, converting data type from FileDataType
+
+int GridMPI<class T>::WriteToFile(const char* FileName, bool Binary, bool VTKHeader, int WriteThread);                      //Write to file using MPI thread with Id WriteThread
+int GridMPI<class T>::WriteToFile(const char* FileName, bool Binary, bool VTKHeader, GridRegion Region, int WriteThread);   //Write GridRegion to file using MPI thread with Id WriteThread
+```
+
+A single MPI thread whose index is ReadThread (or WriteThread) performs the actual file read (or write), automatically transfering data back from other threads in a buffered way. The bool Binary parameter specifies whether data is written out in raw binary format, otherwise ASCII text. bool VTKHeader optionally adds a Paraview VTK header.
 
 ### Decomposition.h
 
