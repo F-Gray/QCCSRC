@@ -717,7 +717,7 @@ int main(){
 }
 
 ```
-The Threads class is initialised and then the member function RunThreads is called which creates n threads. The ThreadWork function recieves a single parameter of type Threads::Thread which contains the following members
+The <i>Threads</i> class is initialised and then the member function <i>RunThreads</i> is called which creates n threads. The ThreadWork function recieves a single parameter of type <i>Threads::Thread</i> which contains the following members
 
 ```C++
 void* Threads::Thread::Data;                       //The argument passed by RunThreads(...)
@@ -730,7 +730,7 @@ void  Threads::Thread::SyncThreads(int* nActive);  //Same as SyncThreads() but r
 
 These members allow each thread to know its index, the number of threads running as well as synchronize with one another. If some threads return before reaching SyncThreads(), then only running threads will wait, and the overload SyncThreads(int* nActive) can be used to determine how many threads are still running.
 
-The Threads::RunThreads(...) function has multiple variants. RunThreads(...) functions block until all threads have returned, whereas the RunThreadsAsync(...) functions return immediately after creating the threads, which now run in parallel to the host thread.
+The <i>Threads::RunThreads(...)</i> function has multiple variants. <i>RunThreads(...)</i> functions block until all threads have returned, whereas the <i>RunThreadsAsync(...)</i> functions return immediately after creating the threads, which now run in parallel to the host thread.
 
 ```C++
 bool Threads::RunThreads(int n, int (*Addr)(Threads::Thread*) );                 //Run n threads at Addr 
@@ -740,7 +740,7 @@ bool Threads::RunThreadsAsync(int n, int (*Addr)(Threads::Thread*) );           
 bool Threads::RunThreadsAsync(int n, int (*Addr)(Threads::Thread*), void* Data); 
 ```
 
-The Threads class exposes two further synchronisation routines for the host thread, once RunThreadsAsync has been called. These are
+The Threads class exposes two further synchronisation routines for the host thread, once <i>RunThreadsAsync</i> has been called. These are
 
 ```C++
 bool Threads::IsRunning();                  //Check if any threads are still running
@@ -797,23 +797,23 @@ The following methods can be used to obtain time intervals
 
 ```C++
 
-Timer::GetTimeSinceLastStep();      //Returns time since GetTimeSinceLastStep or GetTimeSinceLastStepms was last called in seconds
-Timer::GetTimeSinceLastStepms();    //Returns time since GetTimeSinceLastStep or GetTimeSinceLastStepms was last called in milliseconds
-Timer::GetSimulationTime();         //Returns time since SimulationTimer class was intialised in seconds
+double SimulationTimer::GetTimeSinceLastStep();      //Returns time since GetTimeSinceLastStep or GetTimeSinceLastStepms was last called in seconds
+double SimulationTimer::GetTimeSinceLastStepms();    //Returns time since GetTimeSinceLastStep or GetTimeSinceLastStepms was last called in milliseconds
+double SimulationTimer::GetSimulationTime();         //Returns time since SimulationTimer class was intialised in seconds
 
 ```
 
 The timer class can also be reset using
 
 ```C++
-Timer::Reset();    //Reset timer
+void SimulationTimer::Reset();    //Reset timer
 ```
 
 A variety of different time formats can be printed to the console using
 
 ```C++
-Timer::PrintTime(double Seconds);                      //Print time with default format (TimeFormat_Day_Hour_Min_Sec)
-Timer::PrintTime(double Seconds, TimeFormat Format);   //Print time with chosen format from TimeFormat enumeration
+void SimulationTimer::PrintTime(double Seconds);                      //Print time with default format (TimeFormat_Day_Hour_Min_Sec)
+void SimulationTimer::PrintTime(double Seconds, TimeFormat Format);   //Print time with chosen format from TimeFormat enumeration
 ```
 
 Time formats can be chosen from the <i>TimeFormat</i> enumeration
