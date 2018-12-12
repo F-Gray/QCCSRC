@@ -2305,9 +2305,11 @@ private:
 
 	bool Decompose1D(){
 
+		long long* CountBuf = new long long[_NodeValueCount];
+
 		double* nNodesPerDiv = new double[nDiv];
 
-		long long nNodesTot = WeightMode ? _Lattice->CountOccurences(_NodeValue) : arrSz[0]*arrSz[1]*arrSz[2];
+		long long nNodesTot = WeightMode ? _Lattice->CountOccurences(_NodeValue, _NodeValueCount, CountBuf) : arrSz[0]*arrSz[1]*arrSz[2];
 
 		for(int i=0; i<nDiv; i++)
 			nNodesPerDiv[i] = (double)nNodesTot / (double)nDiv;
@@ -2316,10 +2318,13 @@ private:
 
 		delete[] nNodesPerDiv;
 
+		delete[] CountBuf;
 		return r;
 	}
 
 	bool Decompose2D(){
+
+		long long* CountBuf = new long long[_NodeValueCount];
 
 		int d[2];	//The two decomposition directions
 
@@ -2348,7 +2353,7 @@ private:
 		int* nDivB = new int[nDivA];				//Number of sub divisions in each partition
 		double* nNodesDivA = new double[nDivA];		//Number of fluid nodes in each partition
 
-		long long nNodesTot = WeightMode ? _Lattice->CountOccurences(_NodeValue) : arrSz[0]*arrSz[1]*arrSz[2];
+		long long nNodesTot = WeightMode ? _Lattice->CountOccurences(_NodeValue, _NodeValueCount, CountBuf) : arrSz[0]*arrSz[1]*arrSz[2];
 
 		for(int i=0; i<nDivA; i++){
 
@@ -2363,6 +2368,7 @@ private:
 		if(!r){
 			delete[] nNodesDivA;
 			delete[] RegionsDir1;
+			delete[] CountBuf;
 			return false;
 		}
 
@@ -2374,7 +2380,7 @@ private:
 
 			double* nNodesDivB = new double[nDivB[i]];
 
-			long long nNodesDivA_Rounded = WeightMode ? _Lattice->CountOccurences(_NodeValue, RegionsDir1[i].Region) : RegionsDir1[i].Region.CountCells();
+			long long nNodesDivA_Rounded = WeightMode ? _Lattice->CountOccurences(_NodeValue, _NodeValueCount, CountBuf, RegionsDir1[i].Region) : RegionsDir1[i].Region.CountCells();
 
 			for(int c=0; c<nDivB[i]; c++)
 				nNodesDivB[c] = (double)nNodesDivA_Rounded / (double)nDivB[i];
@@ -2389,6 +2395,7 @@ private:
 				delete[] nNodesDivA;
 				delete[] nDivB;
 				delete[] RegionsDir1;
+				delete[] CountBuf;
 				return false;
 			}
 
@@ -2399,6 +2406,7 @@ private:
 		delete[] nNodesDivA;
 		delete[] nDivB;
 		delete[] RegionsDir1;
+		delete[] CountBuf;
 
 		return true;
 	}
