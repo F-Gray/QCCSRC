@@ -2405,6 +2405,8 @@ private:
 
 	bool Decompose3D(){
 
+		long long* CountBuf = new long long[_NodeValueCount];
+
 		int d[3];	//The three decomposition directions
 
 		d[0]  = (Dirs[0]==Dir_X) ? 0 : ( (Dirs[0]==Dir_Y) ? 1 : 2 );	//Direction of decomposition 1
@@ -2429,7 +2431,7 @@ private:
 		int* nSubDivA = new int[nDivA];				//Number of sub divisions in each partition
 		double* nNodesDivA = new double[nDivA];		//Number of fluid nodes in each partition
 
-		long long nNodesTot = WeightMode ? _Lattice->CountOccurences(_NodeValue) : arrSz[0]*arrSz[1]*arrSz[2];
+		long long nNodesTot = WeightMode ? _Lattice->CountOccurences(_NodeValue, _NodeValueCount, CountBuf) : arrSz[0]*arrSz[1]*arrSz[2];
 
 		for(int i=0; i<nDivA; i++){
 
@@ -2446,6 +2448,7 @@ private:
 			delete[] nSubDivA;
 			delete[] nNodesDivA;
 			delete[] RegionsDir1;
+			delete[] CountBuf;
 			return false;
 		}
 
@@ -2470,7 +2473,7 @@ private:
 			int* nSubDivB = new int[nDivB];					//Number of sub divisions in each partition
 			double* nNodesDivB = new double[nDivB];			//Number of fluid nodes in each partition
 
-			long long nNodesDivA_Rounded = WeightMode ? _Lattice->CountOccurences(_NodeValue, RegionsDir1[i].Region) : RegionsDir1[i].Region.CountCells();
+			long long nNodesDivA_Rounded = WeightMode ? _Lattice->CountOccurences(_NodeValue, _NodeValueCount, CountBuf, RegionsDir1[i].Region) : RegionsDir1[i].Region.CountCells();
 
 			for(int c=0; c<nDivB; c++){
 
@@ -2491,6 +2494,7 @@ private:
 				delete[] nSubDivA;
 				delete[] nNodesDivA;
 				delete[] RegionsDir1;
+				delete[] CountBuf;
 				return false;
 			}
 
@@ -2500,7 +2504,7 @@ private:
 
 				double* nNodesDivC = new double[nSubDivB[i2]];
 
-				long long nNodesDivB_Rounded = WeightMode ? _Lattice->CountOccurences(_NodeValue, RegionsDir2[i2].Region) : RegionsDir2[i2].Region.CountCells();
+				long long nNodesDivB_Rounded = WeightMode ? _Lattice->CountOccurences(_NodeValue, _NodeValueCount, CountBuf, RegionsDir2[i2].Region) : RegionsDir2[i2].Region.CountCells();
 
 				for(int c=0; c<nSubDivB[i2]; c++)
 					nNodesDivC[c] = (double)nNodesDivB_Rounded / (double)nSubDivB[i2];
@@ -2516,6 +2520,7 @@ private:
 					delete[] nSubDivA;
 					delete[] nNodesDivA;
 					delete[] RegionsDir1;
+					delete[] CountBuf;
 					return false;
 				}
 
@@ -2532,6 +2537,7 @@ private:
 		delete[] nSubDivA;
 		delete[] nNodesDivA;
 		delete[] RegionsDir1;
+		delete[] CountBuf;
 
 		return true;
 	}
