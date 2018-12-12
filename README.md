@@ -622,41 +622,60 @@ int main(){
     int GridSzX = 100;                                 //Grid size
     int GridSzY = 100;
     int GridSzZ = 100;
-    
-    
-    //Read in dataset
-    
-    Grid<int> DataSet(GridSzX, GridSzY, GridSzZ);      //Create Grid to contain 3D dataset
-    
-    int ret = DataSet.ReadFromFile("C:/DataSet.raw", true);      //Read in dataset from file
-    
-    if(ret != 0){
-        printf("Unable
-    }
-    
-    //Perform grid decomposition
-    
-    int nPartitions = 16;                              //Number of partitions to divide grid into
-    
-    char DecompStr[] = "zyx";			       //Decomposition mode: hierarchical, first in z then y then x
-    
-    int ActiveCellsList[] = {0, 1};                    //Declare values 0 and 1 as active cells
 
-    Decomposition<int> Decomp(Geometry, nPartitions, DecompStr, ActiveCellsList, 2);  //Decomposition constructor performs the decomposition
+
+    //Read in dataset
+
+    Grid<int> DataSet(GridSzX, GridSzY, GridSzZ);             //Create Grid to contain 3D dataset
+
+    int ret = DataSet.ReadFromFile("C:/DataSet.raw", true);   //Read in dataset from file
+
+    if(ret != 0){
+        printf("Unable to read dataset\n");
+    }
+
+    //Perform grid decomposition
+
+    int nPartitions = 16;                              //Number of partitions to divide grid into
+
+    char DecompStr[] = "zyx";                          //Decomposition mode: hierarchical, first in z then y then x
+
+    int ActiveCellsValue = 0;                          //Declare values 0 as active cell
+
+    Decomposition<int> Decomp(&DataSet, nPartitions, DecompStr, ActiveCellsValue);  //Create Decomposition class which performs the decomposition
 
     if(!Decomp.Success){
         printf("Grid decomposition failed\n");
         return 0;
     }
-    
-    
+
+
     //Obtain subregions
-    
+
     for(int i=0; i<nPartitions; i++){
-    
-    
-    
+
+        GridRegion Region = Decomp.Partitions[i].Region;         //The region of each partition
+
+        printf("Region [%i] in (%s) with %lli active cells\n",
+                i,
+                Region.ToStr(),
+                Decomp.Partitions[i].NodeCount               );
+			  
+        for(int z=Region.z0; z<Region.z1; z++)
+        for(int y=Region.y0; y<Region.y1; y++)
+        for(int x=Region.x0; x<Region.x1; x++){		//Highlight partitions
+
+            if(DataSet(x, y, z) != 0)
+                DataSet(x, y, z) = i + 1;
+
+        }
+
     }
+
+
+    //Output decomposition to file
+
+    DataSet.WriteToFile("C:/DataSetDecomp.raw", true, false);
 
     return 0;
 }
