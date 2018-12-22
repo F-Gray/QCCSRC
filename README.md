@@ -86,7 +86,7 @@ ListFlt2 = { 0.035                //...or spread over multiple lines using curly
 
 1.2 <b>InputFile.cpp</b>
 
-In our cpp file we can define the variables to be read in using the <i>InputValueStructEx</i> struct and use the <i>InputFileReader</i> class to perform the read.
+In our cpp file we can define the variables to be read in using the `InputValueStructEx` struct and use the `InputFileReader` class to perform the read.
 
 ```C++
 
@@ -144,7 +144,7 @@ void ReadInputFile(){
 }
 ```
 
-The struct <i>InputValueStructEx</i> is defined
+The struct `InputValueStructEx` is defined
 
 ```C++
 struct InputValueStructEx{
@@ -161,7 +161,7 @@ struct InputValueStructEx{
 };
 ```
 
-Note that when reading in arrays of strings, the <i>DataSz</i> parameter should be set to the maximum length of each array entry (which includes the ending null character '\0'). Values are read into the char array at intervals of <i>DataSz</i>. For example, if we reading a maximum of 4 strings, each of 31 bytes, we would define our input string variable of 128 bytes, set <i>DataSz</i> = 32, and each array element would written to index 32 * n, for n = {0, 1, 2, 3}.
+Note that when reading in arrays of strings, the `DataSz` parameter should be set to the maximum length of each array entry (which includes the ending null character '\0'). Values are read into the char array at intervals of `DataSz`. For example, if we reading a maximum of 4 strings, each of 31 bytes, we would define our input string variable of 128 bytes, set `DataSz` = 32, and each array element would written to index 32 * n, for n = {0, 1, 2, 3}.
 
 The DataType enumeration lists supported data types and is defined
 
@@ -180,7 +180,7 @@ enum InputFileDataType{
 
 #### 2. Example with complex data
 
-The <i>InputFileReader</i> class also supports reading nested data structures, as shown in the following example
+The `InputFileReader` class also supports reading nested data structures, as shown in the following example
 
 2.1 <b>Input.txt</b>
 
@@ -201,7 +201,7 @@ ComplexData = {   { Name = "Item1"                     //Each element contains a
               }
 ```
 
-Datasets such as this can be read in by setting the <i>DataType</i> = DataType_InputValueStructEx in <i>InputValueStructEx</i>, as shown in the following code
+Datasets such as this can be read in by setting the `DataType = DataType_InputValueStructEx` in `InputValueStructEx`, as shown in the following code
   
   2.2 <b>InputFile.cpp</b>
 
@@ -243,9 +243,9 @@ InputValueStructEx Parameters[] = {
 ...
 ```
 
-Here we define a second list of parameters using <i>InputValueStructEx</i> struct, which define entries for the sub-data. Now, the "ComplexData" entry in the list of the main parameters has <i>InputValueStructEx.Ptr</i> set to an array of <i>DataStruct</i>, and the <i>InputValueStructEx.DataStruct</i> field is set to the sub parameters list DataStructParams.
+Here we define a second list of parameters using `InputValueStructEx` struct, which define entries for the sub-data. Now, the "ComplexData" entry in the list of the main parameters has `InputValueStructEx::Ptr` set to an array of `DataStruct`, and the `InputValueStructEx::DataStruct` field is set to the sub parameters list "DataStructParams".
 
-Notice how pointers to data locations in the sub data <i>InputValueStructEx</i> are now relative to the struct pointer. This is achieved by using the <i>offsetof</i> macro. Note also that <i>offsetof</i> is only certain to behave correctly if the struct is POD ("plain old data").
+Notice how pointers to data locations in the sub data `InputValueStructEx` are now relative to the struct pointer. This is achieved by using the `offsetof` macro. Note also that `offsetof` is only certain to behave correctly if the struct is POD ("plain old data").
 
 #### 3. Example with MPI threads
 
@@ -255,13 +255,13 @@ If MPI is used, and the preprocessor definition MPI_INCLUDED is defined, then a 
 InputFileReader(MPI_Comm Comm, int SrcThread);
 ```
 
-All MPI threads initialise the class using the group communicator <i>Comm</i> and the index of the thread which will perform the file read. All threads then call the member function ReadInputFile(...) as in example 1.2, and this now automatically distributes the parameters read from the input file to all threads, and makes the result of GetErrorCode() available to all threads.
+All MPI threads initialise the class using the group communicator `Comm` and the index of the thread which will perform the file read. All threads then call the member function `ReadInputFile(...)` as in example 1.2, and this now automatically distributes the parameters read from the input file to all threads, and makes the result of `GetErrorCode()` available to all threads.
 
 ### DataFiles.h
 
 ### Grids.h
 
-The <i>Grid</i> class provides a container for 3D (as well as 2D and 1D) datasets. It also provides useful capabilities for distributed computing applications, such as the ability to extract subvolumes with extra 'ghost' layers which may be over loop boundaries.
+The `Grid` class provides a container for 3D (as well as 2D and 1D) datasets. It also provides useful capabilities for distributed computing applications, such as the ability to extract subvolumes with extra 'ghost' layers which may be over loop boundaries.
 
 #### 1. Example of 3D grid
 
@@ -326,7 +326,7 @@ T& Grid<class T>::operator()(int X);
 
 ```
 
-Likewise, two methods <i>Get</i> and <i>GetPtr</i> can be used to obtain the value and pointer to the value at a particular coordinate respectively. These have the same overloads as the () operator
+Likewise, two methods `Get` and `GetPtr` can be used to obtain the value and pointer to the value at a particular coordinate respectively. These have the same overloads as the () operator
 
 ```C++
 T Grid<class T>::Get(long long X, long long Y, long long Z, long long n);      //Get value at X, Y, Z, component n
@@ -334,13 +334,13 @@ T Grid<class T>::Get(long long X, long long Y, long long Z, long long n);      /
 T* Grid<class T>::GetPtr(long long X, long long Y, long long Z, long long n);  //Get pointer to element at X, Y, Z, component n
 ```
 
-A number of functions are also available to set the value at a particular coordinate. These have the same overloads as the Get functions, except that the extra parameter </i>Value</i> is always included as the last parameter
+A number of functions are also available to set the value at a particular coordinate. These have the same overloads as the Get functions, except that the extra parameter `Value` is always included as the last parameter
 
 ```C++
 void Grid<class T>::Set(long long X, long long Y, long long Z, long long n, T Value); //Set value at X, Y, Z, component n
 ```
 
-Values can also be set throughout the grid, or in specific regions using the <i>SetAll</i> function. Similarly, value replacement can be performed using <i>ReplaceValue</i>, and the function <i>ScaleValues</i> can be used to multiply all values by a given factor
+Values can also be set throughout the grid, or in specific regions using the `SetAll` function. Similarly, value replacement can be performed using `ReplaceValue`, and the function `ScaleValues` can be used to multiply all values by a given factor
 
 ```C++
 void Grid<class T>::SetAll(T Value);                          //Set all to Value
@@ -358,7 +358,7 @@ void Grid<class T>::ScaleValues(T Scale, GridRegion Region);      //Multiply all
 ```
 #### 3. GridRegion
 
-The <i>GridRegion</i> struct can be used to specify a 3D region and has the following constructors
+The `GridRegion` struct can be used to specify a 3D region and has the following constructors
 
 ```C++
 GridRegion::GridRegion(long long XStart, long long XEnd, long long YStart, long long YEnd, long long ZStart, long long ZEnd);
@@ -406,7 +406,7 @@ GridRegion GridRegion::Overlap(GridRegion* Region);         //Return new GridReg
 
 #### 4. Grid Transformations
 
-A useful capability of the <i>Grid</i> class is the ability to perform coarsegraining operations, extract subgrids and perform inversions in Cartesian directions. In this example, we read in a grid from a file, and scale the image down.
+A useful capability of the `Grid` class is the ability to perform coarsegraining operations, extract subgrids and perform inversions in Cartesian directions. In this example, we read in a grid from a file, and scale the image down.
 
 ```C++
 int main(){
@@ -435,7 +435,7 @@ int main(){
 }
 ```
 
-In the above code, we use the coarsegraining constructor to create a new, scaled down version of the initial dataset. The <i>CoarseGrain</i> struct can be initialised using
+In the above code, we use the coarsegraining constructor to create a new, scaled down version of the initial dataset. The `CoarseGrain` struct can be initialised using
 
 ```C++
 Coarsegrain::Coarsegrain(long long SizeX, long long SizeY, long long SizeZ, bool DiscreteMode);
@@ -444,9 +444,9 @@ Coarsegrain::Coarsegrain(long long SizeX, long long SizeY, long long SizeZ);
 Coarsegrain::Coarsegrain(int SizeX, int SizeY, int SizeZ);
 ```
 
-SizeX, SizeY and SizeZ define the new size of the grid, which must be less than the original, but not necessarily by the same factors. When DiscreteMode = true, coarsegrained cells contain the mode value of their overlap on the original grid, otherwise they use the average value. DiscreteMode = true is useful for preserving the values in discrete e.g. integer datasets, whereas the continuous average is useful for smoothing over interfaces. The default value is DiscreteMode = false.
+SizeX, SizeY and SizeZ define the new size of the grid, which must be less than the original, but not necessarily by the same factors. When `DiscreteMode = true`, coarsegrained cells contain the mode value of their overlap on the original grid, otherwise they use the average value. `DiscreteMode = true` is useful for preserving the values in discrete e.g. integer datasets, whereas the continuous average is useful for smoothing over interfaces. The default value is `DiscreteMode = false`.
 
-In preference to using constructors, the <i>Grid</i> class can read in from other <i>Grid</i> instances using the following member functions
+In preference to using constructors, the `Grid` class can read in from other `Grid` instances using the following member functions
 
 ```C++
 void Grid::ReadGridCoarsegrained(Grid& GridRef, Coarsegrain CG_Op);                       //Read coarsegrained version of GridRef into Grid
@@ -461,7 +461,7 @@ void Grid::ReadGrid(Grid& GridRef, GridPosition Offset);                 //Read 
 void Grid::ReadGrid(Grid& GridRef, GridPosition Offset, bool Flip[3]);   //Read GridRef into Grid at Offset position abd invert in specified Cartesian directions
 ```
 
-The <i>GridPosition</i> struct defines a position at X, Y, Z and has the constructors and members
+The `GridPosition` struct defines a position at X, Y, Z and has the constructors and members
 
 ```C++
 long long GridPosition::x;    //Coordinates
@@ -482,11 +482,11 @@ long long GridPosition::operator[](int i);  //Return x, y, or z coordinate for i
 
 ### GridsMPI.h
 
-The <i>GridMPI</i> class is particularly useful for handling very large datasets on distributed systems. This is because the 3D grid is automatically partitioned and distributed amongst MPI threads, meaning that bottlenecks due to single node memory limitations are avoided.
+The `GridMPI` class is particularly useful for handling very large datasets on distributed systems. This is because the 3D grid is automatically partitioned and distributed amongst MPI threads, meaning that bottlenecks due to single node memory limitations are avoided.
 
 #### 1. Example
 
-This simple example creates a <i>GridMPI</i> class, reads in a dataset and operates on it before writing to another file. By passing the MPI_Comm parameter, the class transparently performs a grid partitioning and distribution over all MPI threads in the communicator group.
+This simple example creates a `GridMPI` class, reads in a dataset and operates on it before writing to another file. By passing the MPI_Comm parameter, the class transparently performs a grid partitioning and distribution over all MPI threads in the communicator group.
 
 ```C++
 
@@ -551,7 +551,7 @@ void GridMPI<class T>::SetMaxBufferSize(long long BufSizeBytes);
 
 The default size is 32 MB, and the maximum value which can be set is 2 GB.
 
-The <i>GridMPI</i> class also exposes similar data operations to the <i>Grid</i> class, such as counting and set functions which can work on subregions. In this case, operations on a single subregion may involve some or all of the MPI threads, depending how the dataset has been distributed internally. In cases where more specific, user-defined operations are needed, the class makes available information on the distribution of data as an array of <i>GridRegion</i> structs
+The `GridMPI` class also exposes similar data operations to the `Grid` class, such as counting and set functions which can work on subregions. In this case, operations on a single subregion may involve some or all of the MPI threads, depending how the dataset has been distributed internally. In cases where more specific, user-defined operations are needed, the class makes available information on the distribution of data as an array of `GridRegion` structs
 
 ```C++
 GridRegion* GridMPI<class T>::Regions;
@@ -569,9 +569,9 @@ void     GridMPI<class T>::CoordLocalToGlobal(int Pos[3]);             //Transfo
 void     GridMPI<class T>::CoordLocalToGlobal(int* x, int* y, int* z);
 ```
 
-The member functions <i>CoordGlobalToLocal</i> and <i>CoordLocalToGlobal</i> can be used to map coordinates on the global grid to the corresponding coordinate in the local data grid, and vice versa. The <i>GridLocal</i> member exposes a <i>Grid</i> class which contains the local data.
+The member functions `CoordGlobalToLocal` and `CoordLocalToGlobal` can be used to map coordinates on the global grid to the corresponding coordinate in the local data grid, and vice versa. The `GridLocal` member exposes a `Grid` class which contains the local data.
 
-The <i>GridMPI</i> class also implements members to obtain, read in and move subgrid regions.
+The `GridMPI` class also implements members to obtain, read in and move subgrid regions.
 
 ```C++
 void GridMPI<class T>::ObtainSubGrid(Grid<T>& GridOut, GridRegion Region);                                          //Obtain data in Region in local Grid GridOut
@@ -586,13 +586,13 @@ void GridMPI<class T>::CopyRegion(GridRegion RegionFrom, GridPosition PosTo);   
 void GridMPI<class T>::CopyRegion(GridRegion RegionFrom, GridPosition PosTo, bool Flip[3]);  //Move data in RegionFrom to new position PosTo in global grid and invert in specified Cartesian directions
 ```
 
-<i>ObtainSubGrid</i> functions extract regions from the grid into local <i>Grid</i> classes. This is done on a per-thread basis, meaning that each MPI thread may specify its own GridRegion to extract, and this will be copied from the global grid into the local <i>Grid</i> GridOut. This function includes the possibility of specifying extra boundary layers using the int Boundary[6] parameter. These specify a thickness in +X, -X, +Y, -Y, +Z and -Z respectively of extra nodes which are copied from the global geometry. The advantage of using this parameter is that extra boundary nodes will be obtained from over the grid boundaries if necessary. This is useful for obtaining extra "ghost" data transfer layers using loop boundary conditions in simulation models.
+`ObtainSubGrid` functions extract regions from the grid into local `Grid` classes. This is done on a per-thread basis, meaning that each MPI thread may specify its own `GridRegion` to extract, and this will be copied from the global grid into the local `Grid` "GridOut". This function includes the possibility of specifying extra boundary layers using the `int Boundary[6]` parameter. These specify a thickness in +X, -X, +Y, -Y, +Z and -Z respectively of extra nodes which are copied from the global geometry. The advantage of using this parameter is that extra boundary nodes will be obtained from over the grid boundaries if necessary. This is useful for obtaining extra "ghost" data transfer layers using loop boundary conditions in simulation models.
 
-<i>ReadSubGrid</i> functions read data from local <i>Grid</i> data into the global grid. This is again done on a per-thread basis, so individual threads specify the <i>GridRegion</i> their data is written to. The optional bool Flip[3] parameter can flip the data in each of the 3 Cartesian directions.
+`ReadSubGrid` functions read data from local `Grid` data into the global grid. This is again done on a per-thread basis, so individual threads specify the `GridRegion` their data is written to. The optional `bool Flip[3]` parameter can flip the data in each of the 3 Cartesian directions.
 
-Regions of the global grid can also be coped from one position to another using the <i>CopyRegion</i> function, again with the option to flip the data in the Cartesian directions. All MPI threads must specify the same regions and positions for this function.
+Regions of the global grid can also be coped from one position to another using the `CopyRegion` function, again with the option to flip the data in the Cartesian directions. All MPI threads must specify the same regions and positions for this function.
 
-Note that for <i>ObtainSubGrid</i>, <i>ReadSubGrid</i> and <i>CopyRegion</i> functions, all MPI threads in the MPI_Comm group must make simultaneous calls. If a thread does not need to read or write data using <i>ObtainSubGrid</i> and <i>ReadSubGrid</i>, it can specify a zero region (e.g. GridRegion(0, 0, 0, 0, 0, 0)). This because the threads may be needed internally to transfer data to other threads.
+Note that for `ObtainSubGrid`, `ReadSubGrid` and `CopyRegion` functions, all MPI threads in the MPI_Comm group must make simultaneous calls. If a thread does not need to read or write data using `ObtainSubGrid` and `ReadSubGrid`, it can specify a zero region (e.g. GridRegion(0, 0, 0, 0, 0, 0)). This because the threads may be needed internally to transfer data to other threads.
 
 These functions are optimised for large-scale parallel systems, which may have thousands of threads. The implementation of these functions runs internal copy operations in parallel, using sub-groups of threads depending on the overlap of the required regions with the data partitions.
 
@@ -611,7 +611,7 @@ A single MPI thread whose index is ReadThread (or WriteThread) performs the actu
 
 ### Decomposition.h
 
-The <i>Decomposition</i> class performs 1D, 2D and 3D grid decomposition using node-weighted size balancing. It has 3 main operating modes: 1) using <i>Grid</i> data on a single-threaded system, 2) using <i>Grid</i> data on a multithreaded MPI system and 3) using <i>GridMPI</i> data on a multithreaded MPI system. It also implements methods to map regions of neighbouring partitions where data transfer is needed, and distrbute and recombine data grids over MPI threads.
+The `Decomposition` class performs 1D, 2D and 3D grid decomposition using node-weighted size balancing. It has 3 main operating modes: 1) using `Grid` data on a single-threaded system, 2) using `Grid` data on a multithreaded MPI system and 3) using `GridMPI` data on a multithreaded MPI system. It also implements methods to map regions of neighbouring partitions where data transfer is needed, and distrbute and recombine data grids over MPI threads.
 
 #### 1. Example of node-weighted domain decomposition on a single thread
 
@@ -683,11 +683,11 @@ int main(){
 
 ### Threads.h
 
-This defines a class called <i>Threads</i> which creates local threads and a <i>Mutex</i> class for synchronisation. It provides similar capabilities to the C++11 thread library, however the <i>Threads</i> class has its own inter-thread synchronisation routines built in which simplifies coding for highly parallel applications.
+This defines a class called `Threads` which creates local threads and a `Mutex` class for synchronisation. It provides similar capabilities to the C++11 thread library, however the `Threads` class has its own inter-thread synchronisation routines built in which simplifies coding for highly parallel applications.
 
 #### 1. Example with thread creation and synchronisation
 
-In this example, we use the <i>Threads</i> class to create a number of parallel threads, and demonstrate the synchronisation routines
+In this example, we use the `Threads` class to create a number of parallel threads, and demonstrate the synchronisation routines
 
 ```C++
 
@@ -717,7 +717,7 @@ int main(){
 }
 
 ```
-The <i>Threads</i> class is initialised and then the member function <i>RunThreads</i> is called which creates n threads. The ThreadWork function recieves a single parameter of type <i>Threads::Thread</i> which contains the following members
+The `Threads` class is initialised and then the member function `RunThreads` is called which creates n threads. The ThreadWork function recieves a single parameter of type `Threads::Thread` which contains the following members
 
 ```C++
 void* Threads::Thread::Data;                       //The argument passed by RunThreads(...)
@@ -728,9 +728,9 @@ void  Threads::Thread::SyncThreads();              //Block until all running thr
 void  Threads::Thread::SyncThreads(int* nActive);  //Same as SyncThreads() but returns the current number of running threads in *nActive
 ```
 
-These members allow each thread to know its index, the number of threads running as well as synchronize with one another. If some threads return before reaching SyncThreads(), then only running threads will wait, and the overload SyncThreads(int* nActive) can be used to determine how many threads are still running.
+These members allow each thread to know its index, the number of threads running as well as synchronize with one another. If some threads return before reaching `SyncThreads()`, then only running threads will wait, and the overload `SyncThreads(int* nActive)` can be used to determine how many threads are still running.
 
-The <i>Threads::RunThreads(...)</i> function has multiple variants. <i>RunThreads(...)</i> functions block until all threads have returned, whereas the <i>RunThreadsAsync(...)</i> functions return immediately after creating the threads, which now run in parallel to the host thread.
+The `Threads::RunThreads(...)` function has multiple variants. `RunThreads(...)` functions block until all threads have returned, whereas the `RunThreadsAsync(...)` functions return immediately after creating the threads, which now run in parallel to the host thread.
 
 ```C++
 bool Threads::RunThreads(int n, int (*Addr)(Threads::Thread*) );                 //Run n threads at Addr 
@@ -740,7 +740,7 @@ bool Threads::RunThreadsAsync(int n, int (*Addr)(Threads::Thread*) );           
 bool Threads::RunThreadsAsync(int n, int (*Addr)(Threads::Thread*), void* Data); 
 ```
 
-The Threads class exposes two further synchronisation routines for the host thread, once <i>RunThreadsAsync</i> has been called. These are
+The Threads class exposes two further synchronisation routines for the host thread, once `RunThreadsAsync` has been called. These are
 
 ```C++
 bool Threads::IsRunning();                  //Check if any threads are still running
@@ -757,7 +757,7 @@ int Threads::ThreadReturnValue(int tId);    //Returns the return value of thread
 
 #### 2. Mutex class
 
-The <i>Threads.h</i> library also contains a simple mutex class with a lock function which can be used to control access to resources in a system with multiple threads. Its members are
+The Threads.h library also contains a simple mutex class with a lock function which can be used to control access to resources in a system with multiple threads. Its members are
 
 ```C++
 Mutex::Mutex();                //Default constructor
@@ -767,7 +767,7 @@ void Mutex::Lock(bool Lock);   //Acquire the lock (Lock = true) or release the l
 
 ### Timer.h
 
-This file provides a simple high resolution timer class called <i>SimulationTimer</i>, which compatible with both Linux and Windows.
+This file provides a simple high resolution timer class called `SimulationTimer`, which compatible with both Linux and Windows.
 
 #### 1. Example
 
@@ -816,7 +816,7 @@ void SimulationTimer::PrintTime(double Seconds);                      //Print ti
 void SimulationTimer::PrintTime(double Seconds, TimeFormat Format);   //Print time with chosen format from TimeFormat enumeration
 ```
 
-Time formats can be chosen from the <i>TimeFormat</i> enumeration
+Time formats can be chosen from the `TimeFormat` enumeration
 
 
 ```C++
