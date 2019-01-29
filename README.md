@@ -940,3 +940,211 @@ enum SubOption{
 ```
 
 ### Topology.cuh
+
+The `TopologyMPI` class maps the resources of an MPI cluster. It uses an MPI communicator and returns information on the MPI threads, nodes and GPUs and their relationships. This can be useful for determining how to optimise data-transfer, and whether particular GPUs are located on the same node (so as to use peer-to-peer memory access, for example). It can also perform assignment of MPI threads to individual GPUs, whilst respecting systems which do this automatically (see notes on GPU assignment).
+
+#### 1. Example
+
+The code below uses the TopoloyMPI class to map the topology of an MPI system with GPUs. It then uses the result to split MPI threads into two groups, one with threads assigned to a GPU, the other without.
+
+```C++
+int main(int argc, char *argv[]){
+
+	//MPI Initialisation
+
+	MPI_Init(&argc, &argv);
+	
+	int nThreads;
+	int ThreadId;
+
+	MPI_Comm_size(MPI_COMM_WORLD, &nThreads);	//Get number of threads running
+	MPI_Comm_rank(MPI_COMM_WORLD, &ThreadId);	//Get thread ID
+	
+	//Topology
+	
+	TopologyMPI Topology;				//System topology
+
+	if(!Topology.ObtainTopology(MPI_COMM_WORLD)){	//Topology maps system topology, including GPUs
+		MPI_Finalize();
+		return 0;
+	}
+
+	if(ThreadId == 0){	//Prints topology to console
+		printf("--------------------------------------------------------\n");
+		Topology.PrintTopology();
+		printf("--------------------------------------------------------\n\n");
+	}
+
+	//Split MPI threads into groups with and without GPUs assigned
+	
+	MPI_Comm GPUComm;
+
+	MPI_Comm_split(MPI_COMM_WORLD, (Topology.Threads[ThreadId].HasGPU ? 0 : 1), 0, &GPUComm);
+	
+	int nThreadsGPU;
+	int ThreadIdGPU;
+
+	MPI_Comm_size(GPUComm, &nThreadsGPU);	//Get number of threads running in local group
+	MPI_Comm_rank(GPUComm, &ThreadIdGPU);	//Get thread ID in local group
+
+	//Program
+
+	if(!Topology.Threads[ThreadId].HasGPU){		//Non-GPU threads wait to end
+		MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Finalize();
+		return 0;
+	}
+
+
+	//... Only MPI threads assigned to a GPU run here					
+
+
+	//Finalise
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Finalize();
+	return 0;
+}
+```
+
+An example of the output of this code is
+
+```
+--------------------------------------------------------
+Host 'node-gpu-1' (Total Mem: 125.9GB) with 4 GPUs and 4 MPI threads
+   Threads: 0, 1, 2, 3
+
+Host 'node-gpu-2' (Total Mem: 125.9GB) with 4 GPUs and 4 MPI threads
+   Threads: 4, 5, 6, 7
+
+Total number of GPUs: 8
+
+GPU [0] on 'node-gpu-1' thread 0:
+   Name: Tesla P100-PCIE-16GB
+   Mem:  15.9GB
+GPU [1] on 'node-gpu-1' thread 3:
+   Name: Tesla P100-PCIE-16GB
+   Mem:  15.9GB
+GPU [2] on 'node-gpu-1' thread 1:
+   Name: Tesla P100-PCIE-16GB
+   Mem:  15.9GB
+GPU [3] on 'node-gpu-1' thread 2:
+   Name: Tesla P100-PCIE-16GB
+   Mem:  15.9GB
+GPU [0] on 'node-gpu-2' thread 7:
+   Name: Tesla P100-PCIE-16GB
+   Mem:  15.9GB
+GPU [1] on 'node-gpu-2' thread 6:
+   Name: Tesla P100-PCIE-16GB
+   Mem:  15.9GB
+GPU [2] on 'node-gpu-2' thread 4:
+   Name: Tesla P100-PCIE-16GB
+   Mem:  15.9GB
+GPU [3] on 'node-gpu-2' thread 5:
+   Name: Tesla P100-PCIE-16GB
+   Mem:  15.9GB
+--------------------------------------------------------
+```
+
+#### 2. Members
+
+`TopologyMPI` has only a default constructor
+
+```C++
+TopologyMPI::TopologyMPI();	//Initialise class
+```
+
+The topology is mapped by calling `ObtainTopology` on a particular MPI communicator `Comm`:
+
+```C++
+TopologyMPI::ObtainTopology(MPI_Comm Comm);					//Map topology and GPU assignment GPUAssignment_Auto
+TopologyMPI::ObtainTopology(MPI_Comm Comm, GPUAssignment AssignmentMode);	//Map topology with specified GPU assignment
+```
+
+MPI threads are assigned to a particular GPU using one of the following modes:
+
+```C++
+enum GPUAssignment{
+    GPUAssignment_None,		//Does not associate GPUs with MPI threads
+    GPUAssignment_Sequential,	//Assign sequential MPI threads sequential GPUs
+    GPUAssignment_Default,	//Obtain default GPU using cudaGetDevice for each thread
+    GPUAssignment_Auto		//Obtains default GPUs using cudaGetDevice, but reassigns any duplicates sequentially
+};
+```
+The reason for the different GPU assignment modes is that some cluster systems automatically bind a GPU to an MPI thread. Calling `cudaSetDevice` on a such a thread, and specifying a different GPU can result in an error. It is therefore important not to try to reassign GPUs in such a system, and the assignment mode `GPUAssignment_Default` will only use `cudaGetDevice` to find out which GPU an MPI thread is bound to. However, on other systems, no automatic assignment may be performed (by default each thread will run on GPU 0), and each thread must set a GPU using `cudaSetDevice`. In this case, `GPUAssignment_Sequential` can be used.
+These modes though are incompatible with each other, as calling `GPUAssignment_Sequential` will result in errors on a system with automatic GPU assignment, and using `GPUAssignment_Default` on a system without such assignment will lead to all MPI threads running on GPU 0.
+For this reason, the option `GPUAssignment_Auto` is provided. The behaviour of this mode is first to call `cudaGetDevice` on each thread to obtain its current GPU, and then to reassign any threads with the same GPU as another sequentially. This means that systems with GPUs already assigned are not changed, and systems with all threads set to device 0 are assigned sequentially. Thus this mode is compatible with both systems, and is the default assignment mode if none is specified.
+Finally, it is important to note that systems with GPU-thread binding must only be run with the number of threads on each node equal to the number of GPUs on each node.
+
+The `PrintTopology` member function can be used to write the topology to console:
+
+```C++
+TopologyMPI::PrintTopology();	//Print topology to console
+```
+
+
+After the topology has been mapped, the class members can be used to read the information:
+
+```C++
+    TopologyMPI::HostThreadInfo* TopologyMPI::Threads;	//Description of each thread
+    TopologyMPI::HostStruct*     TopologyMPI::Hosts;	//Description of each host
+    TopologyMPI::GPUInfo*        TopologyMPI::GPUs;	//Description of each GPU
+
+    int TopologyMPI::ThreadCount;	//Total thread count
+    int TopologyMPI::HostCount;		//Total host count
+    int TopologyMPI::GPUCount;		//Total GPU count
+```
+
+`TopologyMPI::Threads`, `TopologyMPI::Hosts` and `TopologyMPI::GPUs` are arrays of structures containing information about each thread, host and GPU respectively. The corresponding structs are:
+
+```C++	
+struct HostThreadInfo{
+
+    int ThreadId;		//MPI thread index
+
+    char HostName[256];		//Host name
+    size_t HostMemTot;		//Total memory on host (bytes)
+
+    HostStruct* Host;		//Host of this thread
+	
+    int  nGPUs;			//Number of GPUs on this host
+
+    bool HasGPU;		//Associated with GPU
+    int GPUIndex;		//Index of thread GPU
+    GPUInfo* GPU;		//GPU thread associated with this thread
+};
+
+struct HostStruct{
+
+    char HostName[256];		//Host name
+    size_t TotalMem;		//Total system memory of host
+
+    int nThreads;		//Number of MPI threads running on host
+    int nGPUs;			//Number of GPUs on this host
+
+    int* ThreadIds;		//Id of threads running on this host
+    HostThreadInfo** Threads;	//Array of ptrs to MPI threads on host
+
+    GPUInfo** GPUs;		//Array of ptrs to GPUs on this host
+};
+
+struct GPUInfo{
+
+    char DeviceName[256];		//Device name
+	
+    int DeviceIndex;			//Index of device on host
+
+    cudaDeviceProp Properties;		//CUDA device properties
+
+    char HostName[256];			//Host name
+    HostStruct* Host;			//Ptr to host
+
+    bool HasMPIThread;			//GPU associated with MPI thread
+    int MPIThreadId;			//MPI thread associated with device
+    HostThreadInfo* MPIThread;		//Ptr to MPI thread
+};
+```
+
+These structs contain pointers (or arrays of pointers) to other structs they are related to. E.g. the `HostStruct` contains an array of pointers to `HostThreadInfo` structs of threads which run on it, and `GPUInfo` of the GPUs on it. Therefore, all relationships are mapped.
+
+The thread info `HostThreadInfo` contains GPU assignment information, including the flag `bool HasGPU`. This may be false if 1) no GPU has been assigned using `GPUAssignment_None` or 2) there are more MPI threads than GPUs on the host and `GPUAssignment_Sequential` has been used.
