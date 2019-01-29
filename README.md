@@ -837,4 +837,106 @@ enum TimeFormat{
 
 ### FilePaths.h
 
+The `FilePath` class provides simple file and folder string concatenation, with value replacement which can be used to insert variables into custom file names.
+
+#### 1. Example
+
+```C++
+
+int main(){
+
+    int TimeStep = 500;		//This value will be inserted into the file name
+
+    char Folder[]   = "Output/";		//Folder ( '/' at the end is not mandatory)
+    char FileName[] = "Data t=%t.txt";		//File with '%t' which will be replaced with the Timestep variable
+    
+    char Path[256];		//This will hold the final path
+    
+    FilePath::ValueSub subs[] = {		//List of string substitutions
+        { "%T", &TimeStep, FilePath::Type_int32, 0, false}, 	//Replace %T and %t with variable TimeStep
+        { "%t", &TimeStep, FilePath::Type_int32, 0, false}
+    };
+
+    FilePath PathOut(Folder, FileName, subs, 2, FilePath::Sub_File);	//FilePath class performs substitutions and joins folder and file strings
+    
+    PathOut.ObtainPath(Path, sizeof(Path));	//Write result to Path
+    
+    printf("Outputting to '%s'\n", Path);
+
+    return 0;
+}
+
+```
+
+This example produces the output
+
+```
+Outputting to 'Output/Data t=500.txt'
+```
+#### 2. Members
+
+The constructors are as follows:
+
+```C++
+FilePath::FilePath();	//Creates class with empty file and folder strings
+FilePath::FilePath(const char* file);	//Creates class with a file string
+FilePath::FilePath(const char* file, ValueSub* Subs, int nSubs);	//Creates class with a file string and performs substitutions
+FilePath::FilePath(const char* folder, const char* file);		//Creates class with file and folder strings
+FilePath::FilePath(const char* folder, const char* file, ValueSub* Subs, int nSubs, SubOption Option);	//Creates class with file and folder strings, and performs substitutions on either/both
+```
+
+The file and folder strings may be set independently, and string value substitutions performed using the member functions
+
+```C++
+void FilePath::SetFile(const char* file);				//Sets file string
+void FilePath::SetFile(const char* file, ValueSub* Subs, int nSubs);	//Sets file string and performs substitutions
+
+void FilePath::SetFolder(const char* folder);					//Sets folder string
+void FilePath::SetFolder(const char* folder, ValueSub* Subs, int nSubs);	//Sets folder string and performs substitutions
+```
+
+The resulting path with file and folder strings combined, as well as string substitutions performed can be obtained using
+
+```C++
+int FilePath::ObtainPath(char* Dest, int DestSz);	//Writes resulting path to Dest whose max size is DestSz
+```
+
+Substitution of variables into the string is determined by specifying an array of type `FilePath::ValueSub`, which is defined
+
+```C++
+struct ValueSub{
+    const char* Text;		//The search string to replace
+    const void* DataPtr;	//Pointer to variable to substitute
+    FilePath::DataType Type;	//The type of the value at DataPtr
+    int nDecimalPlaces;		//For float values, the number of decimal places
+    bool floatExp;		//Scientific format "%e" else "%f"
+};
+```
+
+The data type is specified using the `FilePath::DataType` enumeration
+
+```C++
+enum DataType{
+    Type_bool,
+    Type_char,
+    Type_int32,
+    Type_uint32,
+    Type_int64,
+    Type_uint64,
+    Type_float,
+    Type_double,
+    Type_string
+};
+```
+
+Finally, for member functions performing substitutions on either/both of file and folder strings, the behaviour is determined by specfiying a  `FilePath::SubOption`:
+
+```C++
+enum SubOption{
+    Sub_File,		//Substitute in file string only
+    Sub_Folder,		//Substitute in folder string only
+    Sub_File_Folder	//Substitute in both file and folder strings
+};
+```
+
 ### Topology.cuh
