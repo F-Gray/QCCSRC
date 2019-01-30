@@ -1057,11 +1057,11 @@ TopologyMPI::TopologyMPI();	//Initialise class
 The topology is mapped by calling `ObtainTopology` on a particular MPI communicator `Comm`:
 
 ```C++
-TopologyMPI::ObtainTopology(MPI_Comm Comm);					//Map topology and GPU assignment GPUAssignment_Auto
-TopologyMPI::ObtainTopology(MPI_Comm Comm, GPUAssignment AssignmentMode);	//Map topology with specified GPU assignment
+bool TopologyMPI::ObtainTopology(MPI_Comm Comm);				//Map topology and GPU assignment GPUAssignment_Auto
+bool TopologyMPI::ObtainTopology(MPI_Comm Comm, GPUAssignment AssignmentMode);	//Map topology with specified GPU assignment
 ```
 
-MPI threads are assigned to a particular GPU using one of the following modes:
+The return value `true` indicates success. MPI threads are assigned to a particular GPU using one of the following modes:
 
 ```C++
 enum GPUAssignment{
@@ -1079,7 +1079,7 @@ Finally, it is important to note that systems with GPU-thread binding must only 
 The `PrintTopology` member function can be used to write the topology to console:
 
 ```C++
-TopologyMPI::PrintTopology();	//Print topology to console
+void TopologyMPI::PrintTopology();	//Print topology to console
 ```
 
 
